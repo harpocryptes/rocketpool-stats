@@ -18,6 +18,11 @@ params = {
 	16: { 'step': 2 },
 }
 
+min_collat_percent = 10
+
+dark = "#fa9b02"
+light = "#f7b852"
+
 refresh_period_hours = 23
 
 data_file = "./minipools.json.gz"
@@ -48,7 +53,7 @@ for minipool in data:
 	stake = int(node['rplStake'])
 	min_stake = int(node['rplMinStake'])
 	if min_stake == 0: continue
-	collat = stake/min_stake * 10 / 100
+	collat = stake/min_stake * min_collat_percent / 100
 	borrowed = 32 - leb
 	collat = min(collat, 1.5 * leb / borrowed)
 	collat_perc = int(100*collat / params[leb]['step'])
@@ -60,14 +65,17 @@ for kind in [8, 16]:
 	
 	x=[]
 	y=[]
+	color=[]
 	# Create the figure and axes objects, specify the size and the dots per inches
 	fig, ax = plt.subplots(figsize=(15, 4))
 	start = min([coll for coll, count in enumerate(collateralization) if count > 0])
 	for coll, count in list(enumerate(collateralization))[start:]:
-		x.append(step * coll)
+		ratio = step * coll
+		x.append(ratio)
 		y.append(count)
+		color.append([light, dark][ratio >= min_collat_percent])
 	
-	ax.bar(x, y, width=step, zorder=2)
+	ax.bar(x, y, color=color, width=step, zorder=2)
 	
 	ax.grid(which="major", axis='x', color='#DAD8D7', alpha=0.5, zorder=1)
 	ax.grid(which="major", axis='y', color='#DAD8D7', alpha=0.5, zorder=1)
