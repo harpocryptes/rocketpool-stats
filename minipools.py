@@ -73,7 +73,16 @@ for kind in [8, 16]:
 	ax.grid(which="major", axis='y', color='#DAD8D7', alpha=0.5, zorder=1)
 	
 	plt.xlabel("Staked RPL vs borrowed ETH")
-	ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(100, decimals=0))
+	
+	# Add a '+' to the last ticker, e.g. "50%+" as the last ticker for LEB8, since it aggregates all levels above
+	@matplotlib.ticker.FuncFormatter
+	def major_formatter(tick, pos):
+		res = f'{tick:.0f}%'
+		if tick == x[-1]:
+			res += '+'
+		return res
+	ax.xaxis.set_major_formatter(major_formatter)
+	
 	ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=5 * step))
 	
 	plt.ylabel("Borrowed ETH")
