@@ -27,6 +27,9 @@ refresh_period_hours = 23
 
 data_file = "./minipools.json.gz"
 
+# Make output SVG deterministic to avoid useless diffs
+matplotlib.rcParams['svg.hashsalt'] = "RPL"
+
 def file_age_hours(f):
 	age_seconds = time.time() - os.path.getmtime(data_file)
 	return age_seconds / 60 / 60
