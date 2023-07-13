@@ -47,9 +47,9 @@ data_time = datetime.datetime.fromtimestamp(os.path.getmtime(data_file), datetim
 with gzip.open(data_file, 'r') as f:
 	data = json.load(f)
 
-collateralizations = {
-	 8: [0] * (1 +  50 // params[8]['step']),
-	16: [0] * (1 + 150 // params[16]['step']),
+stats = {
+	 8: { 'count': 0, 'total': 0, 'total_effective': 0, 'collateral': [0] * (1 +  50 // params[8]['step']) },
+	16: { 'count': 0, 'total': 0, 'total_effective': 0, 'collateral': [0] * (1 + 150 // params[16]['step']), }
 }
 
 for minipool in data:
@@ -61,13 +61,19 @@ for minipool in data:
 	if min_stake == 0: continue
 	collat = stake/min_stake * min_collat_percent / 100
 	borrowed = 32 - leb
+	stats[leb]['total'] += collat
+	stats[leb]['count'] += 1
 	collat = min(collat, 1.5 * leb / borrowed)
+	stats[leb]['total_effective'] += collat
 	collat_perc = int(100*collat / params[leb]['step'])
-	collateralizations[leb][collat_perc] += borrowed
+	stats[leb]['collateral'][collat_perc] += borrowed
 
 for kind in [8, 16]:
-	collateralization = collateralizations[kind]
+	s = stats[kind]
+	collateralization = s['collateral']
 	step = params[kind]['step']
+	average = 100 * s['total'] / s['count']
+	average_effective = 100 * s['total_effective'] / s['count']
 	
 	x=[]
 	y=[]
@@ -85,6 +91,11 @@ for kind in [8, 16]:
 	
 	ax.grid(which="major", axis='x', color='#DAD8D7', alpha=0.5, zorder=1)
 	ax.grid(which="major", axis='y', color='#DAD8D7', alpha=0.5, zorder=1)
+	
+	plt.axvline(x=average, label='average', linestyle='dotted')
+	matplotlib.pyplot.text(average + max(x) / 100 / 2, max(y) / 2, "average", rotation=90, verticalalignment='center')
+	#plt.axvline(x=average_effective, label='average effective', linestyle='dotted')
+	#matplotlib.pyplot.text(average_effective + max(x) / 100 / 2, max(y) / 2, "average effective", rotation=90, verticalalignment='center')
 	
 	plt.xlabel("Staked RPL vs borrowed ETH")
 	
