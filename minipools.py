@@ -1,6 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3 -p "python3.withPackages(ps: [ ps.matplotlib ])"
 
+import datetime
 import json
 import gzip
 import os
@@ -40,6 +41,8 @@ if not os.path.exists(data_file) or file_age_hours(data_file) > refresh_period_h
 	req = urllib.request.Request('https://rocketscan.io/api/mainnet/minipools/all', headers=headers)
 	with urllib.request.urlopen(req) as response, open(data_file, 'wb') as out_file:
 	    shutil.copyfileobj(response, out_file)
+
+data_time = datetime.datetime.fromtimestamp(os.path.getmtime(data_file), datetime.timezone.utc).strftime('%Y-%m-%d %H:%M %Z')
 
 with gzip.open(data_file, 'r') as f:
 	data = json.load(f)
@@ -101,3 +104,18 @@ for kind in [8, 16]:
 	
 	plt.title(f"{kind} ETH Minipools", fontsize=14, weight='bold', alpha=.8)
 	plt.savefig(f"../harpocryptes.github.io/minipools-{kind}eth.svg")
+
+with open("../harpocryptes.github.io/index.html", "w") as f:
+	f.write(f"""\
+<html>
+<body>
+	<div style="text-align: center">
+		<img src = "minipools-8eth.svg"  alt="8 ETH Minipools"/  style="padding: 1em">
+		<img src = "minipools-16eth.svg" alt="16 ETH Minipools"/ style="padding: 1em">
+	</div>
+	<div style="text-align: right; color: gray">
+		Data retrieved from rocketscan.io/api at {data_time}
+	</div>
+</body>
+</html>
+""")
