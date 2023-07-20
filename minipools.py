@@ -53,8 +53,8 @@ def load_data():
 		data = json.load(f)
 	
 	stats = {
-		 8: { 'count': 0, 'total': 0, 'total_effective': 0, 'collateral': [0] * (1 +  50 // params[8]['step']) },
-		16: { 'count': 0, 'total': 0, 'total_effective': 0, 'collateral': [0] * (1 + 150 // params[16]['step']), }
+		 8: { 'count': 0, 'total': 0, 'all': [], 'total_effective': 0, 'collateral': [0] * (1 +  50 // params[8]['step']) },
+		16: { 'count': 0, 'total': 0, 'all': [], 'total_effective': 0, 'collateral': [0] * (1 + 150 // params[16]['step']), }
 	}
 	
 	for minipool in data:
@@ -68,6 +68,7 @@ def load_data():
 		borrowed = 32 - leb
 		stats[leb]['total'] += collat
 		stats[leb]['count'] += 1
+		stats[leb]['all'].append(collat)
 		collat = min(collat, 1.5 * leb / borrowed)
 		stats[leb]['total_effective'] += collat
 		collat_perc = int(100*collat / params[leb]['step'])
@@ -82,6 +83,7 @@ def generate_page(stats):
 		step = params[kind]['step']
 		average = 100 * s['total'] / s['count']
 		average_effective = 100 * s['total_effective'] / s['count']
+		median = 100 * sorted(s['all'])[len(s['all'])//2]
 		
 		x=[]
 		y=[]
@@ -104,6 +106,8 @@ def generate_page(stats):
 		matplotlib.pyplot.text(average + max(x) / 100 / 2, max(y) / 2, "average", rotation=90, verticalalignment='center')
 		#plt.axvline(x=average_effective, label='average effective', linestyle='dotted')
 		#matplotlib.pyplot.text(average_effective + max(x) / 100 / 2, max(y) / 2, "average effective", rotation=90, verticalalignment='center')
+		plt.axvline(x=median, label='median', linestyle='dotted')
+		matplotlib.pyplot.text(median + max(x) / 100 / 2, max(y) / 2, "median", rotation=90, verticalalignment='center')
 		
 		plt.xlabel("Staked RPL vs borrowed ETH")
 		
